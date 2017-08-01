@@ -1,0 +1,5 @@
+E:\Projects\My\WebRTC\Conference.Entities\bin\Debug\Conference.Entities.dll
+E:\Projects\My\WebRTC\Conference.Entities\bin\Debug\Conference.Entities.pdb
+E:\Projects\My\WebRTC\Conference.Entities\obj\Debug\Conference.Entities.csprojResolveAssemblyReference.cache
+E:\Projects\My\WebRTC\Conference.Entities\obj\Debug\Conference.Entities.dll
+E:\Projects\My\WebRTC\Conference.Entities\obj\Debug\Conference.Entities.pdb

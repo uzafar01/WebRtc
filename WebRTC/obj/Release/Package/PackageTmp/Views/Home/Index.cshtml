@@ -1,0 +1,283 @@
+﻿@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+    
+    <article>       
+   
+
+        <!-- just copy this <section> and next script -->
+        <section class="experiment">
+            <section>
+                <span>
+                    Private ??
+                    <a href="" target="_blank" title="Open this link in new tab. Then your room will be private!">
+                        <code>
+                            <strong id="unique-token">#123456789</strong>
+                        </code>
+                    </a>
+                </span>
+
+                <input type="text" id="conference-name">
+                <button id="setup-new-conference" class="setup">Setup New Conference</button>
+            </section>
+
+            <!-- list of all available broadcasting rooms -->
+            <table style="width: 100%;" id="rooms-list">
+            </table>
+
+            <!-- local/remote videos container -->
+            <div id="videos-container"></div>
+        </section>
+
+        <script>
+        // Muaz Khan     - https://github.com/muaz-khan
+        // MIT License   - https://www.webrtc-experiment.com/licence/
+        // Documentation - https://github.com/muaz-khan/RTCMultiConnection
+            var connection = new RTCMultiConnection();
+            
+        connection.session = {
+            audio: true,
+            video: true            
+        };
+        //connection.maxParticipantsAllowed = 3;
+
+        connection.onRequest = function (request) {
+            if ((connection.numberOfConnectedUsers + 1) <= 2) {
+                connection.accept(request);
+                return;
+            }
+            else {
+                alert("Room is full");
+                connection.reject(request);
+                return;
+            }
+        };
+        connection.onstream = function(e) {
+            e.mediaElement.width = 600;
+            videosContainer.insertBefore(e.mediaElement, videosContainer.firstChild);
+            rotateVideo(e.mediaElement);
+            scaleVideos();
+        };
+        function rotateVideo(mediaElement) {
+            mediaElement.style[navigator.mozGetUserMedia ? 'transform' : '-webkit-transform'] = 'rotate(0deg)';
+            setTimeout(function() {
+                mediaElement.style[navigator.mozGetUserMedia ? 'transform' : '-webkit-transform'] = 'rotate(360deg)';
+            }, 1000);
+        }
+        connection.onstreamended = function(e) {
+            e.mediaElement.style.opacity = 0;
+            rotateVideo(e.mediaElement);
+            setTimeout(function() {
+                if (e.mediaElement.parentNode) {
+                    e.mediaElement.parentNode.removeChild(e.mediaElement);
+                }
+                scaleVideos();
+            }, 1000);
+        };
+        var sessions = {};
+        connection.onNewSession = function (session) {
+           
+            if (sessions[session.sessionid]) return;
+            alert(session.sessionid);
+            sessions[session.sessionid] = session;
+            var tr = document.createElement('tr');
+            tr.innerHTML = '<td><strong>' + session.sessionid + '</strong> is running a conference!</td>' +
+                '<td><button class="join">Join</button></td>';
+            roomsList.insertBefore(tr, roomsList.firstChild);
+            var joinRoomButton = tr.querySelector('.join');
+            joinRoomButton.setAttribute('data-sessionid', session.sessionid);
+            joinRoomButton.onclick = function() {
+                this.disabled = true;
+                var sessionid = this.getAttribute('data-sessionid');
+                session = sessions[sessionid];
+                if (!session) throw 'No such session exists.';            
+                    connection.join(session);                 
+               
+            };
+        };
+        var videosContainer = document.getElementById('videos-container') || document.body;
+        var roomsList = document.getElementById('rooms-list');     
+        document.getElementById('setup-new-conference').onclick = function() {
+            this.disabled = true;
+            $("[class*='join']").disabled = true;
+             connection.open(document.getElementById('conference-name').value || 'Anonymous');
+        };
+        // setup signaling to search existing sessions
+        connection.connect();
+        (function() {
+            var uniqueToken = document.getElementById('unique-token');
+            if (uniqueToken)
+                if (location.hash.length > 2) uniqueToken.parentNode.parentNode.parentNode.innerHTML = '<h2 style="text-align:center;"><a href="' + location.href + '" target="_blank">Share this link</a></h2>';
+                else uniqueToken.innerHTML = uniqueToken.parentNode.parentNode.href = '#' + (Math.random() * new Date().getTime()).toString(36).toUpperCase().replace(/\./g, '-');
+        })();
+        function scaleVideos() {
+            var videos = document.querySelectorAll('video'),
+                length = videos.length,
+                video;
+            var minus = 130;
+            var windowHeight = 700;
+            var windowWidth = 600;
+            var windowAspectRatio = windowWidth / windowHeight;
+            var videoAspectRatio = 4 / 3;
+            var blockAspectRatio;
+            var tempVideoWidth = 0;
+            var maxVideoWidth = 0;
+            for (var i = length; i > 0; i--) {
+                blockAspectRatio = i * videoAspectRatio / Math.ceil(length / i);
+                if (blockAspectRatio <= windowAspectRatio) {
+                    tempVideoWidth = videoAspectRatio * windowHeight / Math.ceil(length / i);
+                } else {
+                    tempVideoWidth = windowWidth / i;
+                }
+                if (tempVideoWidth > maxVideoWidth)
+                    maxVideoWidth = tempVideoWidth;
+            }
+            for (var i = 0; i < length; i++) {
+                video = videos[i];
+                if (video)
+                    video.width = maxVideoWidth - minus;
+            }
+        }
+        window.onresize = scaleVideos;
+        window.onclose = function () {
+            connection.disconnect;
+        };
+
+        </script>
+
+       
+    </article>
+
+
+  
+  @*<article>
+<div class="github-stargazers"></div>
+
+<section>
+    <h2>New Session:</h2>
+    <button id="start-new-session">Start New Video Session</button>
+</section>
+
+<table style="border-left: 1px solid black; width: 100%;">
+    <tr>
+        <td id="local-video-container">
+            <h2>Local video container</h2>
+        </td>
+        <td id="remote-videos-container" style="background: white; border-left: 1px solid black;">
+            <h2>
+                Remote videos container
+            </h2>
+        </td>
+    </tr>
+    <tr>
+        <td colspan="2">
+            <table id="sessions-list" style="width: 100%;"></table>
+        </td>
+    </tr>
+</table>
+<script>
+    // window.username = Math.random() * 9999 << 9999;
+    var connection = new RTCMultiConnection();
+    var sessionsList = document.getElementById('sessions-list');
+    connection.onNewSession = function (session) {
+        var tr = document.createElement('tr');
+        tr.innerHTML = '<td>' + session.extra.username + '</td>';
+        var td = document.createElement('td');
+        var button = document.createElement('button');
+        button.innerHTML = 'join';
+        td.appendChild(button);
+        tr.appendChild(td);
+        sessionsList.insertBefore(tr, sessionsList.firstChild);
+        button.onclick = function () {
+            if (!window.username) window.username = prompt('Please enter your username') || 'Anonymous';
+            connection.extra = {
+                username: window.username
+            };
+            session.join();
+            document.getElementById('start-new-session').disabled = true;
+            sessionsList.style.display = 'none';
+        };
+    };
+    // check if user is ejected
+    // clear rooms-list if user is ejected
+    connection.onSessionClosed = function (event) {
+        if (event.isEjected) {
+            sessionsList.innerHTML = '';
+            sessionsList.style.display = 'block';
+        }
+    };
+    document.getElementById('start-new-session').onclick = function () {
+        if (!window.username) window.username = prompt('Please enter your username') || 'Anonymous';
+        connection.extra = {
+            username: window.username
+        };
+        connection.interval = 1000;
+        connection.sessionid = window.username;
+        connection.open();
+        document.getElementById('start-new-session').disabled = true;
+        sessionsList.style.display = 'none';
+    };
+    connection.onstream = function (stream) {
+        if (stream.type === 'local') {
+            var video = getVideo(stream, {
+                username: window.username
+            });
+            document.getElementById('local-video-container').appendChild(video);
+        }
+        if (stream.type === 'remote') {
+            var video = getVideo(stream, stream.extra);
+            var remoteVideosContainer = document.getElementById('remote-videos-container');
+            remoteVideosContainer.appendChild(video, remoteVideosContainer.firstChild);
+        }
+        stream.mediaElement.width = innerWidth / 3.4;
+    };
+    connection.onstreamended = function (e) {
+        if (e.mediaElement && e.mediaElement.parentNode && e.mediaElement.parentNode.parentNode) {
+            e.mediaElement.parentNode.parentNode.removeChild(e.mediaElement.parentNode);
+        }
+    };
+    function getVideo(stream, extra) {
+        var div = document.createElement('div');
+        div.className = 'video-container';
+        div.id = stream.userid || 'self';
+        if (stream.type === 'remote') {
+            if (connection.isInitiator) {
+                var eject = document.createElement('button');
+                eject.className = 'eject';
+                eject.title = 'Eject this User';
+                eject.onclick = function () {
+                    // eject a specific user
+                    connection.eject(this.parentNode.id);
+                    this.parentNode.style.display = 'none';
+                };
+                div.appendChild(eject);
+            }
+        }
+        div.appendChild(stream.mediaElement);
+        if (extra) {
+            var h2 = document.createElement('h2');
+            h2.innerHTML = extra.username;
+            div.appendChild(h2);
+        }
+        return div;
+    }
+    connection.connect();
+</script>
+
+<br />
+<br />
+
+<h2 id="go">Go ahead and try <a href="http://www.rtcmulticonnection.org/docs/" target="_blank">RTCMultiConnection</a>!</h2>
+
+<br />
+<br />
+<section style="border: 1px solid rgb(189, 189, 189); border-radius: .2em; margin: 1em 3em;">
+    <h2 id="feedback" style="border-bottom: 1px solid rgb(189, 189, 189); padding: .2em .4em;">Feedback</h2>
+
+    <div>
+        <textarea id="message" style="border: 1px solid rgb(189, 189, 189); height: 8em; margin: .2em; outline: none; resize: vertical; width: 98%;" placeholder="Have any message? Suggestions or something went wrong?"></textarea>
+    </div>
+    <button id="send-message" style="font-size: 1em;">Send Message</button>
+</section>
+    </article>*@

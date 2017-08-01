@@ -1,0 +1,14 @@
+E:\Projects\My\WebRTC\Conference.Data\bin\Debug\Conference.Data.dll
+E:\Projects\My\WebRTC\Conference.Data\bin\Debug\Conference.Data.pdb
+E:\Projects\My\WebRTC\Conference.Data\bin\Debug\Conference.Entities.dll
+E:\Projects\My\WebRTC\Conference.Data\bin\Debug\MongoDB.Bson.dll
+E:\Projects\My\WebRTC\Conference.Data\bin\Debug\MongoDB.Driver.Core.dll
+E:\Projects\My\WebRTC\Conference.Data\bin\Debug\MongoDB.Driver.dll
+E:\Projects\My\WebRTC\Conference.Data\bin\Debug\System.Runtime.InteropServices.RuntimeInformation.dll
+E:\Projects\My\WebRTC\Conference.Data\bin\Debug\Conference.Entities.pdb
+E:\Projects\My\WebRTC\Conference.Data\bin\Debug\MongoDB.Bson.xml
+E:\Projects\My\WebRTC\Conference.Data\bin\Debug\MongoDB.Driver.xml
+E:\Projects\My\WebRTC\Conference.Data\bin\Debug\MongoDB.Driver.Core.xml
+E:\Projects\My\WebRTC\Conference.Data\obj\Debug\Conference.Data.csprojResolveAssemblyReference.cache
+E:\Projects\My\WebRTC\Conference.Data\obj\Debug\Conference.Data.dll
+E:\Projects\My\WebRTC\Conference.Data\obj\Debug\Conference.Data.pdb

@@ -1,0 +1,96 @@
+﻿<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">    
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    @*<link rel="stylesheet" href="//cdn.webrtc-experiment.com/style.css">*@
+
+    <link href="~/Content/bootstrap.min.css" rel="stylesheet" />
+    <link href="~/Content/fancybox/jquery.fancybox.css" rel="stylesheet" />
+    <link href="~/Content/flexslider.css" rel="stylesheet" />
+    <link href="~/Content/style.css" rel="stylesheet" />
+  
+    <title>@ViewBag.Title</title>
+    @Styles.Render("~/Content/css")
+    @Scripts.Render("~/bundles/modernizr")
+   
+  
+    <script>
+        var sessionsCount = 0;
+        document.createElement('article');
+        document.createElement('footer');
+    </script>
+
+    <script type="text/javascript">
+
+        function activateTab(evt, pageId) {
+            var tablinks = document.getElementsByClassName("tablinks");
+            for (i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+
+          var tabCtrl = document.getElementById('tabCtrl');
+          var pageToActivate = document.getElementById(pageId);
+          for (var i = 0; i < tabCtrl.childNodes.length; i++) {
+              var node = tabCtrl.childNodes[i];
+              if (node.nodeType == 1) { /* Element */
+                  node.style.display = (node == pageToActivate) ? 'block' : 'none';                  
+              }
+          }
+
+          evt.currentTarget.className += " active";
+      }
+
+    </script>
+    <!-- scripts used for broadcasting -->
+    <script src="//cdn.webrtc-experiment.com/firebase.js">
+    </script>
+    @*<script src="//cdn.webrtc-experiment.com/RTCMultiConnection.js">
+    </script>*@
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+    <script src="https://cdn.webrtc-experiment.com/RTCMultiConnection-v2.2.5.js"></script>
+
+<body>
+    <div id="wrapper">
+        <header>
+            <div class="navbar navbar-default navbar-static-top">
+                <div class="container">
+                    <div class="navbar-header">
+                        <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                            <span class="icon-bar"></span>
+                        </button>
+                        <a class="navbar-brand" href="index.html"><img src="img/logo.png" alt="logo" /></a>
+                    </div>
+                    <div class="navbar-collapse collapse ">
+                        <ul class="nav navbar-nav">
+                            <li><a class="active" href="index.html">Home</a></li>
+                            <li><a href="about.html">About Us</a></li>
+                            <li><a href="contact.html">Contact</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </header><!-- end header -->
+        @RenderBody()
+
+
+        @Scripts.Render("~/bundles/jquery")
+        @RenderSection("scripts", required: false)
+        <!-- commits.js is useless for you! -->
+        <script src="//cdn.webrtc-experiment.com/commits.js" async>
+        </script>
+
+       
+
+        <script src="~/Scripts/MyScript.js"></script>
+        <script src="~/Scripts/bootstrap.min.js"></script>
+        </div>
+</body>
+</html>
+
