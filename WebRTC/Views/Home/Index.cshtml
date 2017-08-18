@@ -60,7 +60,7 @@
                                                                         <p> is running a conference!</p>
                                                             </div>
                                                             <div class="pricing-action">
-                                                                <button class="btn btn-medium btn-theme join" data-sessionid ='@item.SessionId' onclick="JoinButtonClick()"  data-toggle="modal" data-target="#joinConferenceModal"><i class="icon-bolt" ></i> Join</button>
+                                                                <button id ="joinButton" class="btn btn-medium btn-theme join" data-sessionid ='@item.SessionId' onclick="JoinButtonClick('@item.SessionId')"  data-toggle="modal" data-target="#joinConferenceModal"><i class="icon-bolt" ></i> Join</button>
                                                             </div>
                                                            </div>
                                                      </td>

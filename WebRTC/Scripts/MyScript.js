@@ -150,22 +150,28 @@ function buildSessionInfo(session) {
         
 }
 
-function JoinButtonClick() {
+function JoinButtonClick(sessionid) {
 
     $("#joinModalOkBtn").click(function () {
         
-        if (!$('#joinNameTxt').val()) {
+        if (!$('#joinNameText').val()) {
              $('#joinNameTextVal').text('Please provide name.');
         }
         else {
+            
             connection.extra = {
-                username: $('#joinNameTxt').val()
+                username: $('#joinNameText').val()
             }
             this.disabled = true;
-            var sessionid = $('#joinNameTxt').getAttribute('data-sessionid');
+//var sessionid = $('#joinButton').attr('data-sessionid');
+            alert(sessionid);
             var session = sessions[sessionid];
             if (!session) throw 'No such session exists.';
             connection.join(session);
+             $('#conferenceDetail').hide();
+             $('#videoContainer').show();
+             $('#joinConferenceModal').modal('toggle');
+             activateTab(activateTab, 'quickconference')
         }
     });
 
@@ -179,7 +185,7 @@ function SetupNewConference() {
        
     $.ajax({
         type: "POST",
-        url: "/Home/CreateConference",
+        url: "/Home/CreateConference/",
         data:  $('#__AjaxAntiForgeryForm').serialize(),
         datatype: "json",
         success: function (data) {
