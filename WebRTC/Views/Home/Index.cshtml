@@ -60,7 +60,7 @@
                                                                         <p> is running a conference!</p>
                                                             </div>
                                                             <div class="pricing-action">
-                                                                <button id ="joinButton" class="btn btn-medium btn-theme join" data-sessionid ='@item.SessionId' onclick="JoinButtonClick('@item.SessionId')"  data-toggle="modal" data-target="#joinConferenceModal"><i class="icon-bolt" ></i> Join</button>
+                                                                <button id ="joinButton" class="btn btn-medium btn-theme join" data-sessionid ='@item.Id' onclick="JoinButtonClick('@item.Id')"  data-toggle="modal" data-target="#joinConferenceModal"><i class="icon-bolt" ></i> Join</button>
                                                             </div>
                                                            </div>
                                                      </td>
@@ -83,7 +83,7 @@
                             </div>
                             </div>
                             <div id="quickconference" style="display: none;">
-                          @Html.Partial("QuickConference", new Conference.Entities.Conference());
+                          @Html.Partial("QuickConference", new Conference.Entities.Conference())
                             
 
                             </div>

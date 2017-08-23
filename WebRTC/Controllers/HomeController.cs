@@ -75,6 +75,7 @@ namespace WebRTC.Controllers
             return View(model);
         }
 
+    
         [HttpPost]
         public JsonResult CreateConference(Conference.Entities.Conference model)
         {
@@ -82,7 +83,7 @@ namespace WebRTC.Controllers
             if (insert != null)
             {
                 var conferenceList = conferenceRepo.GetAll();
-                return new JsonResult(){  Data = true, JsonRequestBehavior= JsonRequestBehavior.AllowGet };
+                return new JsonResult(){  Data = insert, JsonRequestBehavior= JsonRequestBehavior.AllowGet };
             }
             else
                 return new JsonResult() { Data = false, JsonRequestBehavior = JsonRequestBehavior.AllowGet };

@@ -12,6 +12,28 @@ var connection = new RTCMultiConnection();
 var sessions = {};
 //var sessionsCount = 0;
 
+//var SIGNALING_SERVER = 'https://webrtcweb.com:9559/';
+//connection.openSignalingChannel = function (config) {
+//    var channel = config.channel || connection.channel || 'default-namespace';
+//    var sender = Math.round(Math.random() * 9999999999) + 9999999999;
+//    io.connect(SIGNALING_SERVER).emit('new-channel', {
+//        channel: channel,
+//        sender: sender
+//    });
+//    var socket = io.connect(SIGNALING_SERVER + channel);
+//    socket.channel = channel;
+//    socket.on('connect', function () {
+//        if (config.callback) config.callback(socket);
+//    });
+//    socket.send = function (message) {
+//        socket.emit('message', {
+//            sender: sender,
+//            data: message
+//        });
+//    };
+//    socket.on('message', config.onmessage);
+//};
+
 connection.session = {
     audio: true,
     video: true
@@ -33,9 +55,7 @@ connection.autoCloseEntireSession = true;
 //};
 connection.onstream = function (e) {   
     if (e.type === 'local') {
-        var video = getVideo(e, {
-            username: window.username
-        });
+        var video = getVideo(e, e.extra );
         document.getElementById('local-video-container').appendChild(video);
     }
     if (e.type === 'remote') {
@@ -61,17 +81,15 @@ connection.onstreamended = function (e) {
 
     e.mediaElement.style.opacity = 0;
     rotateVideo(e.mediaElement);
-    setTimeout(function () {        
+    setTimeout(function () {
         if (e.mediaElement && e.mediaElement.parentNode && e.mediaElement.parentNode.parentNode) {
             e.mediaElement.parentNode.parentNode.removeChild(e.mediaElement.parentNode);
         }
-       
+
         scaleVideos();
     }, 1000);
-
-    $('#conferenceDetail').show();
-    $('#videoContainer').hide();
-};
+    
+}
 
 
 function getVideo(stream, extra) {
@@ -84,7 +102,7 @@ function getVideo(stream, extra) {
             eject.className = 'eject';
             eject.title = 'Eject this User';
             eject.onclick = function () {
-                // eject a specific user
+                // eject a specific user   
                 connection.eject(this.parentNode.id);
                 this.parentNode.style.display = 'none';
             };
@@ -108,7 +126,7 @@ function getVideo(stream, extra) {
         div.appendChild(leave);
     }
     div.appendChild(stream.mediaElement);
-    if (extra) {
+    if (extra) {      
         var h2 = document.createElement('h2');
         h2.innerHTML = extra.username;
         div.appendChild(h2);
@@ -116,6 +134,15 @@ function getVideo(stream, extra) {
     return div;
 }
 
+connection.onspeaking = function (e) {
+    // e.streamid, e.userid, e.stream, etc.
+    e.mediaElement.style.border = '1px solid red';
+};
+
+connection.onsilence = function (e) {
+    // e.streamid, e.userid, e.stream, etc.
+    e.mediaElement.style.border = '';
+};
 
 // check if user is ejected
 // clear rooms-list if user is ejected
@@ -125,8 +152,8 @@ connection.onSessionClosed = function (event) {
         roomsList.innerHTML = '';
         roomsList.style.display = 'block';
 
-        $('#conferenceDetail').show();
-        $('#videoContainer').hide();
+     //   $('#conferenceDetail').show();
+     //   $('#videoContainer').hide();
     }
 
   
@@ -164,7 +191,7 @@ function JoinButtonClick(sessionid) {
             }
             this.disabled = true;
 //var sessionid = $('#joinButton').attr('data-sessionid');
-            alert(sessionid);
+            
             var session = sessions[sessionid];
             if (!session) throw 'No such session exists.';
             connection.join(session);
@@ -191,9 +218,14 @@ function SetupNewConference() {
         success: function (data) {
             
             connection.interval = 1000;
-            connection.sessionid = $('#SessionId').val();
+            connection.sessionid = data;
+            connection.extra = {
+                username: $('#SessionId').val()
+            }
+         
             connection.open();
             buildSessionInfo(connection);
+
             $('#conferenceDetail').hide();
             $('#videoContainer').show();
         },

@@ -8,6 +8,6 @@ namespace Conference.Entities
 {
     public class EntityBase
     {
-        public Guid Id;
+        public Guid Id { get; set; }
     }
 }
