@@ -1,0 +1,48 @@
+﻿@model List<Conference.Entities.Conference>
+@{
+    ViewBag.Title = "All";    
+}
+
+<script src="~/Scripts/MyScript.js"></script>
+
+<div>
+    <table id="rooms-list">
+
+        @{
+            int column = 0;
+            foreach (var item in Model)
+            {
+
+                if (column == 0 || column % 4 == 0)
+                {
+                    @Html.Raw("<tr>");
+                }
+                <td data-sessionid='@item.SessionId'>
+                    <div class="pricing-box-item">
+                        <div class="pricing-heading">
+                            <h3><strong>Room</strong></h3>
+                        </div>
+                        <div class="pricing-container">
+                            <ul>
+                                <li></li>
+                                <li style="width:inherit"><strong> @Html.DisplayFor(model => item.SessionId) </strong></li>
+                            </ul>
+                            <p> is running a conference!</p>
+                        </div>
+                        <div class="pricing-action">
+                            <button id="joinButton" class="btn btn-medium btn-theme join" data-sessionid='@item.Id' onclick="JoinButtonClick('@item.Title', '@item.UrlCode')" data-toggle="modal" data-target="#joinConferenceModal"><i class="icon-bolt"></i> Join</button>
+                        </div>
+                    </div>
+                </td>
+
+                if ((column != 0 && (column + 1) % 4 == 0) || column == Model.Count - 1)
+                {
+                    @Html.Raw("</tr>");
+                }
+
+                column++;
+            }
+        }
+    </table>
+
+</div>

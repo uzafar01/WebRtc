@@ -1,14 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 using System.Web.Mvc;
-using MongoDB.Driver;
 using Conference.Data.Repository;
-using Conference.Entities;
-using Conference.Data.Repository;
-using System.Threading;
-using System.Threading.Tasks;
 
 namespace WebRTC.Controllers
 {
@@ -72,18 +64,40 @@ namespace WebRTC.Controllers
             //conferenceRepo.Insert(obj);
 
             var model = conferenceRepo.GetAll();
-            return View(model);
+            return View();            
         }
 
-    
+        [HttpGet]
+        public ActionResult GetAllConferences()
+        {
+            var model = conferenceRepo.GetAll();
+            return PartialView("AllConference",model);
+        }
+
+
         [HttpPost]
         public JsonResult CreateConference(Conference.Entities.Conference model)
         {
             var insert = conferenceRepo.Insert(model);
             if (insert != null)
             {
-                var conferenceList = conferenceRepo.GetAll();
+               // var conferenceList = conferenceRepo.GetAll();
                 return new JsonResult(){  Data = insert, JsonRequestBehavior= JsonRequestBehavior.AllowGet };
+            }
+            else
+                return new JsonResult() { Data = false, JsonRequestBehavior = JsonRequestBehavior.AllowGet };
+
+        }
+
+        [HttpPost]
+        public JsonResult DeleteConference(string sessionId)
+        {
+            Guid id = new Guid(sessionId);
+            var isDelete = conferenceRepo.DeleteById(id);
+            if (isDelete)
+            {
+                var conferenceList = conferenceRepo.GetAll();
+                return new JsonResult() { Data = true, JsonRequestBehavior = JsonRequestBehavior.AllowGet };
             }
             else
                 return new JsonResult() { Data = false, JsonRequestBehavior = JsonRequestBehavior.AllowGet };

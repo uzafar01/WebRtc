@@ -13,5 +13,6 @@ namespace Conference.Entities
         public DateTime CreatedOn { get; set; }
         public bool IsPrivate { get; set; }
         public string CreatedBy { get; set; }
+        public string UrlCode { get; set; }
     }
 }

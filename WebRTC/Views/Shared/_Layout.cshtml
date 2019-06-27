@@ -13,7 +13,8 @@
     <link href="~/Content/fancybox/jquery.fancybox.css" rel="stylesheet" />
     <link href="~/Content/flexslider.css" rel="stylesheet" />
     <link href="~/Content/style.css" rel="stylesheet" />
-  
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/simple-line-icons/2.4.1/css/simple-line-icons.css" rel="stylesheet" />
+   
     <title>@ViewBag.Title</title>
     @Styles.Render("~/Content/css")
     @Scripts.Render("~/bundles/modernizr")
@@ -23,36 +24,49 @@
         var sessionsCount = 0;
         document.createElement('article');
         document.createElement('footer');
+
     </script>
 
-    <script type="text/javascript">
-
+    <script type="text/javascript">      
+       
         function activateTab(evt, pageId) {
             var tablinks = document.getElementsByClassName("tablinks");
             for (i = 0; i < tablinks.length; i++) {
                 tablinks[i].className = tablinks[i].className.replace(" active", "");
             }
 
+            var tab = document.getElementById(pageId+'li');
+            tab.className += " active";
+
           var tabCtrl = document.getElementById('tabCtrl');
           var pageToActivate = document.getElementById(pageId);
           for (var i = 0; i < tabCtrl.childNodes.length; i++) {
               var node = tabCtrl.childNodes[i];
               if (node.nodeType == 1) { /* Element */
-                  node.style.display = (node == pageToActivate) ? 'block' : 'none';                  
+                  node.style.display = (node == pageToActivate) ? 'block' : 'none';
+                  
               }
           }
 
-          evt.currentTarget.className += " active";
+        //  evt.currentTarget.className += " active";
       }
 
     </script>
     <!-- scripts used for broadcasting -->
-    <script src="//cdn.webrtc-experiment.com/firebase.js">
+    
+  
+    
+   
+    <script>
+// add this script before loading "RTCMultiConnection.min.js"
+window.getExternalIceServers = true;
     </script>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
-    <script src="https://cdn.webrtc-experiment.com/RTCMultiConnection-v2.2.5.js"></script>
-    <script src="https://cdn.webrtc-experiment.com/socket.io.js"> </script>
-    <script src="https://cdn.webrtc-experiment.com/RTCMultiConnection.js"> </script>
+
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>   
+    @*<script src="https://rtcmulticonnection.herokuapp.com/dist/RTCMultiConnection.js"></script>*@
+    <script src="~/Scripts/RTCMultiConnection.js"></script>
+
+   </head>
 <body>
     <div id="wrapper">
         <header>
@@ -81,15 +95,28 @@
 
         @Scripts.Render("~/bundles/jquery")
         @RenderSection("scripts", required: false)
-        <!-- commits.js is useless for you! -->
-        <script src="//cdn.webrtc-experiment.com/commits.js" async>
-        </script>
 
+        
        
+        @*<script src="https://rtcmulticonnection.herokuapp.com/node_modules/webrtc-adapter/out/adapter.js"></script>
+        <script src="https://rtcmulticonnection.herokuapp.com/socket.io/socket.io.js"></script>
+        <script src="https://www.webrtc-experiment.com/common.js"></script>*@
+        <!-- custom layout for HTML5 audio/video elements -->
+        @*<script src="https://rtcmulticonnection.herokuapp.com/dev/getHTMLMediaElement.js"></script>
+        <script src="https://rtcmulticonnection.herokuapp.com/node_modules/recordrtc/RecordRTC.js"></script>*@
 
-        <script src="~/Scripts/MyScript.js"></script>
+        <script src="~/Scripts/webrtc-adapter.js"></script>
+        <script src="~/Scripts/Socket.io.js"></script>       
+        <!-- custom layout for HTML5 audio/video elements -->
+        <script src="~/Scripts/getHTMLMediaElement.js"></script>
+        <script src="~/Scripts/RecordRTC.js"></script>
+        @*<script src="~/Scripts/MyScript.js"></script>*@
+
         <script src="~/Scripts/bootstrap.min.js"></script>
-        </div>
+    </div>
+    <script type="text/javascript">
+       
+    </script>
 </body>
-</html>
+     </html>
 

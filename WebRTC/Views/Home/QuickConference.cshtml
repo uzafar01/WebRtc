@@ -1,23 +1,6 @@
 ﻿@model Conference.Entities.Conference
 
 
-    @*<div class="row">
-        <section>
-            <span>
-                <a href="" target="_blank" title="Open this link in new tab. Then your room will be private!">
-                    <code>
-                        <strong id="unique-token">New Conference</strong>
-                    </code>
-                </a>
-            </span>
-
-            <input type="text" id="conference-name">
-            <button id="setup-new-conference" onclick="SetupNewConference()">Quick Conference</button>
-        </section>
-
-        <section></section>
-    </div>*@
-
 
 <div class="row" id="conferenceDetail">
     @using (Html.BeginForm(null, null, FormMethod.Post, new { id = "__AjaxAntiForgeryForm" }))
@@ -45,6 +28,10 @@
                     </div>
                     <div>@Html.ValidationMessageFor(model => model.SessionId, "", new { @class = "text-danger" })</div>
                 </div>
+
+                @Html.HiddenFor(model => model.UrlCode, new { htmlAttributes = new { @class = "form-control" , @id="UrlCode"} })
+                <label><input type="checkbox" id="record-entire-conference"> Record Entire Conference In The Browser?</label>
+               
                 <div class="form-group">
                     <div class="col-md-6">
                         <input type="button" value="Create" onclick="SetupNewConference()" class="btn btn-default" />
@@ -55,13 +42,19 @@
     }
 </div>
 
+
     <div id="videoContainer"  class="row" style="display:none">
         <section>
             <table style="width: 100%; ">
                 <tr>
                     <td id="local-video-container" style="border: 2px solid #aba7a7;">
                         <h3>Me</h3>
+                        <span id="recording-status" style="display: none;"></span>
+                        <button id="btn-stop-recording" style="display: none;">Stop Recording</button>
                     </td>
+                   
+                </tr>
+                <tr>
                     <td id="remote-videos-container" style="border: 2px solid #aba7a7;">
                         <h3>
                             Peer(s)
