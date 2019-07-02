@@ -116,7 +116,7 @@ connection.onstreamended = function (e) {
 
 // check if user is ejected
 connection.onSessionClosed = function (event) {
-    alert(JSON.stringify(event));
+   
 
     if (event.isEjected) {
         alert('Your session has been terminated by ' + event.extra.username);
@@ -376,7 +376,7 @@ function SetupNewConference() {
                 if (isRoomOpened === true) {                   
                     SetRoomId();
                     
-                  //  showRoomURL(connection.sessionid);
+                    showRoomURL(connection.sessionid);
                 }
                 else {
                   
@@ -463,7 +463,7 @@ function showRoomURL(roomid) {
     var match, search = window.location.search;
     while (match = r.exec(search.substring(1)))
         params[d(match[1])] = d(match[2]);
-    window.params = params;
+    window.params = params;    
 })();
 
 // detect 2G
@@ -473,7 +473,6 @@ if (navigator.connection &&
     alert('2G is not supported. Please use a better internet service.');
 }
 
-var roomid = '';
 function SetRoomId()
 {    
     if (localStorage.getItem(connection.socketMessageEvent)) {
@@ -493,17 +492,56 @@ function SetRoomId()
     }
 }
 
-if (roomid && roomid.length) {
-   // document.getElementById('Title').value = roomid;
-    localStorage.setItem(connection.socketMessageEvent, roomid);
-    // auto-join-room
-    (function reCheckRoomPresence() {
-        connection.checkPresence(roomid, function (isRoomExist) {
-            if (isRoomExist) {
-                connection.join(roomid);
-                return;
+ var roomid = params.roomid;
+    if (!roomid && hashString.length) {
+        roomid = hashString;
+    }
+    if (roomid && roomid.length) {
+       
+        $('#joinConferenceModal').modal('show');
+        $("#joinModalOkBtn").click(function () {
+            if (!$('#joinNameText').val()) {
+                $('#joinNameTextVal').text('Please provide name.');
             }
-            setTimeout(reCheckRoomPresence, 5000);
+            else {
+
+                // document.getElementById('Title').value = roomid;
+                localStorage.setItem(connection.socketMessageEvent, roomid);
+                // auto-join-room
+                (function reCheckRoomPresence() {
+                    connection.checkPresence(roomid, function (isRoomExist) {
+                        if (isRoomExist) {
+                            connection.join(roomid, function (isJoinedRoom, roomid, error) {
+                                if (error) {
+                                    if (error === 'Room not available') {
+                                        alert('This room does not exist. Please either create it or wait for moderator to enter in the room.');
+                                        return;
+                                    }
+                                    alert(error);
+                                }
+                                else {
+                                    connection.extra = {
+                                    username: $('#joinNameText').val()
+                                }
+                                    this.disabled = true;
+                                    $('#conferenceDetail').hide();
+                                    $('#videoContainer').show();
+                                    $('#joinConferenceModal').modal('toggle');
+                                    activateTab(activateTab, 'quickconference');
+                                }
+                            });
+                           
+                            return;
+                        }
+                        else {
+                            alert('This room does not exist.');
+                            return;
+                        }
+                        //setTimeout(reCheckRoomPresence, 5000);
+                    });
+                })();
+            }
         });
-    })();
-}
+       
+    }
+

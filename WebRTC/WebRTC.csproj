@@ -181,6 +181,7 @@
     <None Include="Scripts\jquery-1.9.1.intellisense.js" />
     <Content Include="Scripts\bootstrap.js" />
     <Content Include="Scripts\bootstrap.min.js" />
+    <Content Include="Scripts\getHTMLMediaElement.js" />
     <Content Include="Scripts\jquery-1.9.1.js" />
     <Content Include="Scripts\jquery-1.9.1.min.js" />
     <Content Include="Scripts\jquery-1.9.1.min.map" />
@@ -195,6 +196,10 @@
     <Content Include="Scripts\jquery.validate.unobtrusive.min.js" />
     <Content Include="Scripts\modernizr-2.6.2.js" />
     <Content Include="Scripts\MyScript.js" />
+    <Content Include="Scripts\RecordRTC.js" />
+    <Content Include="Scripts\RTCMultiConnection.js" />
+    <Content Include="Scripts\Socket.io.js" />
+    <Content Include="Scripts\webrtc-adapter.js" />
     <Content Include="Scripts\_references.js" />
     <Content Include="Web.config">
       <SubType>Designer</SubType>
@@ -214,6 +219,7 @@
     <Content Include="Views\Home\Index.cshtml" />
     <Content Include="Views\Home\QuickConference.cshtml" />
     <Content Include="Views\Home\VideoContainer.cshtml" />
+    <Content Include="Views\Home\AllConference.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
