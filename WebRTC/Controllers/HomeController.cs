@@ -62,8 +62,7 @@ namespace WebRTC.Controllers
             //obj.SessionId = "unique 6";
 
             //conferenceRepo.Insert(obj);
-
-            var model = conferenceRepo.GetAll();
+                        
             return View();            
         }
 
@@ -93,6 +92,7 @@ namespace WebRTC.Controllers
         public JsonResult DeleteConference(string sessionId)
         {
             Guid id = new Guid(sessionId);
+
             var isDelete = conferenceRepo.DeleteById(id);
             if (isDelete)
             {

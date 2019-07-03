@@ -117,13 +117,15 @@ connection.onstreamended = function (e) {
 connection.onNewParticipant = function (participantId, userPreferences) {
    
     // if OfferToReceiveAudio/OfferToReceiveVideo should be enabled for specific users
-    if (confirm(participantId + ' would like to join conference. Do you want to allow?')) {
-        connection.acceptParticipationRequest(participantId, userPreferences);
+    if (connection.isInitiator) {
+        if (confirm(participantId + ' would like to join conference. Do you want to allow?')) {
+            connection.acceptParticipationRequest(participantId, userPreferences);
+        }
+        else {
+            connection.disconnectWith(participantId);
+            return;
+        }
     }
-    else {
-        connection.disconnectWith(participantId);
-        return;
-}
     
 };
 
@@ -268,15 +270,10 @@ function getVideo(stream, extra) {
             eject.className = 'eject';
             eject.title = 'Eject this User';
             eject.onclick = function () {
-                // eject a specific user   
-                connection.getAllParticipants().forEach(function (pid) {
-                    if ($(this).parent().parent().attr('id') == pid) {
-                        var peer = connection.peers[pid].peer;
-                                              
-                        peer.removeStream(streamToRemove);
-                        connection.deletePeer(pid);
-                        connection.renegotiate();
-                    }
+                // eject a specific user  
+                connection.send({
+                    userRemoved: true,
+                    removedUserId: stream.userid
                 });
                
                 this.parentNode.style.display = 'none';
@@ -321,6 +318,20 @@ function getVideo(stream, extra) {
 
     return div;
 }
+
+connection.session.data = true; // enable data channels //needed for user ejection
+
+//needed for user ejection
+connection.onmessage = function (event) {
+    if (event.data.userRemoved === true) {
+        if (event.data.removedUserId == connection.userid) {
+            alert(connection.userid + "has been ejected from conference.");
+            connection.close();
+            connection.closeSocket();
+        }
+    }
+};
+
 connection.maxParticipantsAllowed = 4; // one-to-one
 connection.onRoomFull = function (roomid) {
     alert('Room is full.');
