@@ -114,9 +114,21 @@ connection.onstreamended = function (e) {
 
 }
 
-// check if user is ejected
-connection.onSessionClosed = function (event) {
+connection.onNewParticipant = function (participantId, userPreferences) {
    
+    // if OfferToReceiveAudio/OfferToReceiveVideo should be enabled for specific users
+    if (confirm(participantId + ' would like to join conference. Do you want to allow?')) {
+        connection.acceptParticipationRequest(participantId, userPreferences);
+    }
+    else {
+        connection.disconnectWith(participantId);
+        return;
+}
+    
+};
+
+// check if user is ejected
+connection.onSessionClosed = function (event) {   
 
     if (event.isEjected) {
         alert('Your session has been terminated by ' + event.extra.username);
@@ -259,7 +271,7 @@ function getVideo(stream, extra) {
                 // eject a specific user   
                 connection.getAllParticipants().forEach(function (pid) {
                     if ($(this).parent().parent().attr('id') == pid) {
-                        var peer = connection.peers[participantId].peer;
+                        var peer = connection.peers[pid].peer;
                                               
                         peer.removeStream(streamToRemove);
                         connection.deletePeer(pid);
@@ -309,6 +321,18 @@ function getVideo(stream, extra) {
 
     return div;
 }
+connection.maxParticipantsAllowed = 4; // one-to-one
+connection.onRoomFull = function (roomid) {
+    alert('Room is full.');
+};
+
+connection.onUserIdAlreadyTaken = function (useridAlreadyTaken, yourNewUserId) {
+    if (connection.enableLogs) {
+        console.warn('Userid already taken.', useridAlreadyTaken, 'Your new userid:', yourNewUserId);
+    }
+
+    connection.join(useridAlreadyTaken);
+};
 // ......................................................
 // .......................UI Code........................
 // ......................................................
@@ -323,13 +347,14 @@ function JoinButtonClick(sessionid,urlCode) {
         else {           
             
             connection.join(sessionid, function (isJoinedRoom, roomid, error) {
+                
                 if (error) {                    
                     if (error === 'Room not available') {
                         alert('This room does not exist. Please either create it or wait for moderator to enter in the room.');
                         return;
                     }
                     alert(error);
-                }
+                }                
                 else
                 {
                     connection.extra = {
@@ -445,10 +470,9 @@ function SwitchTabOnCloseConference() {
 // ......................................................
 function showRoomURL(roomid) {
     var roomHashURL = '#' + roomid;
-    var roomQueryStringURL = '?roomid=' + roomid;
-    var html = '<h2>Unique URL for your room:</h2><br>';
-    html += 'Hash URL: <a href="' + roomHashURL + '" target="_blank">' + roomHashURL + '</a>';
-    html += '<br>';
+    var roomQueryStringURL = window.location.origin + '?roomid=' + roomid;
+    var html = '<h2>Unique URL for your room:</h2><br>';    
+   
     html += 'QueryString URL: <a href="' + roomQueryStringURL + '" target="_blank">' + roomQueryStringURL + '</a>';
     var roomURLsDiv = document.getElementById('room-urls');
     roomURLsDiv.innerHTML = html;
@@ -473,6 +497,7 @@ if (navigator.connection &&
     alert('2G is not supported. Please use a better internet service.');
 }
 
+var hashString = location.hash.replace('#', '');
 function SetRoomId()
 {    
     if (localStorage.getItem(connection.socketMessageEvent)) {
@@ -482,7 +507,7 @@ function SetRoomId()
         localStorage.setItem(connection.socketMessageEvent, roomid);
     }
    
-    var hashString = location.hash.replace('#', '');
+    
     if (hashString.length && hashString.indexOf('comment-') == 0) {
         hashString = '';
     }
