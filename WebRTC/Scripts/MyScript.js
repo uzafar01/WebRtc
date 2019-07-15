@@ -114,34 +114,46 @@ connection.onstreamended = function (e) {
 
 }
 
-connection.onNewParticipant = function (participantId, userPreferences) {
+//connection.onNewParticipant = function (participantId, userPreferences) {
    
-    // if OfferToReceiveAudio/OfferToReceiveVideo should be enabled for specific users
-    if (connection.isInitiator) {
-        if (confirm(participantId + ' would like to join conference. Do you want to allow?')) {
-            connection.acceptParticipationRequest(participantId, userPreferences);
-        }
-        else {
-            connection.disconnectWith(participantId);
-            return;
-        }
-    }
+//    // if OfferToReceiveAudio/OfferToReceiveVideo should be enabled for specific users
+//    if (confirm(participantId + ' would like to join conference. Do you want to allow?')) {
+//            connection.acceptParticipationRequest(participantId, userPreferences);
+//        }
+//        else {
+//            connection.disconnectWith(participantId);
+//            return;
+//        }  
     
-};
+//};
 
 // check if user is ejected
-connection.onSessionClosed = function (event) {   
+//connection.onSessionClosed = function (event) {   
+   
+//    if (event.isEjected) {
+//        alert('Your session has been terminated by ' + event.extra.username);
+//    }
+//    else {
+//        if (connection.getAllParticipants().length == 0)
+//            DeleteConferenceFromDb(connection.extra.id);
+//    }
 
-    if (event.isEjected) {
-        alert('Your session has been terminated by ' + event.extra.username);
-    }
-    else {
-        DeleteConferenceFromDb(connection.sessionid);
-    }
+//    SwitchTabOnCloseConference();
 
-    SwitchTabOnCloseConference();
+//};
 
+connection.onleave = function (event) {
+   // alert(event.extra.username + ' left.');
+    if (connection.getAllParticipants().length == 0 && connection.isInitiator && connection.userid == event.userid)
+        DeleteConferenceFromDb(connection.extra.id);
 };
+
+connection.onclose = function (event) {   
+    //alert('onclose ' + connection.getAllParticipants().length);
+    //if (connection.getAllParticipants().length == 0 )
+    //    DeleteConferenceFromDb(connection.extra.id);
+};
+
 connection.onMediaError = function (e) {
     if (e.message === 'Concurrent mic process limit.') {
         if (DetectRTC.audioInputDevices.length <= 1) {
@@ -194,76 +206,15 @@ function scaleVideos() {
 }
 window.onresize = scaleVideos;
 
-// ......................................................
-// ......................Handling Room-ID................
-// ......................................................
-function showRoomURL(roomid) {
-    var roomHashURL = '#' + roomid;
-    var roomQueryStringURL = '?roomid=' + roomid;
-    var html = '<h2>Unique URL for your room:</h2><br>';
-    html += 'Hash URL: <a href="' + roomHashURL + '" target="_blank">' + roomHashURL + '</a>';
-    html += '<br>';
-    html += 'QueryString URL: <a href="' + roomQueryStringURL + '" target="_blank">' + roomQueryStringURL + '</a>';
-    var roomURLsDiv = document.getElementById('room-urls');
-    roomURLsDiv.innerHTML = html;
-    roomURLsDiv.style.display = 'block';
-}
-(function () {
-    var params = {},
-        r = /([^&=]+)=?([^&]*)/g;
-    function d(s) {
-        return decodeURIComponent(s.replace(/\+/g, ' '));
-    }
-    var match, search = window.location.search;
-    while (match = r.exec(search.substring(1)))
-        params[d(match[1])] = d(match[2]);
-    window.params = params;
-})();
-var roomid = '';
-function SetRoomId() {
-    if (localStorage.getItem(connection.socketMessageEvent)) {
-        roomid = localStorage.getItem(connection.socketMessageEvent);
-    } else {
-        roomid = $('#Title').val();
-        localStorage.setItem(connection.socketMessageEvent, roomid);
-    }
 
-    var hashString = location.hash.replace('#', '');
-    if (hashString.length && hashString.indexOf('comment-') == 0) {
-        hashString = '';
-    }
-    var roomid = params.roomid;
-    if (!roomid && hashString.length) {
-        roomid = hashString;
-    }
-}
-if (roomid && roomid.length) {
-    document.getElementById('room-id').value = roomid;
-    localStorage.setItem(connection.socketMessageEvent, roomid);
-    // auto-join-room
-    (function reCheckRoomPresence() {
-        connection.checkPresence(roomid, function (isRoomExist) {
-            if (isRoomExist) {
-                connection.join(roomid);
-                return;
-            }
-            setTimeout(reCheckRoomPresence, 5000);
-        });
-    })();
-
-}
-// detect 2G
-if (navigator.connection &&
-   navigator.connection.type === 'cellular' &&
-   navigator.connection.downlinkMax <= 0.115) {
-    alert('2G is not supported. Please use a better internet service.');
-}
 function getVideo(stream, extra) {
    
     var div = document.createElement('div');
     div.className = 'video-container';
     div.id = stream.userid || 'self';
+    div.title = stream.extra.username ? stream.extra.username : 'Me';
     var h2 = document.createElement('h2');
+    h2.innerHTML = stream.extra.username ? stream.extra.username : 'Me';
     if (stream.type === 'remote') {
         if (connection.isInitiator) {
             var eject = document.createElement('button');
@@ -281,7 +232,7 @@ function getVideo(stream, extra) {
             div.appendChild(eject);
             
         }
-        h2.innerHTML = stream.extra.username;
+       // h2.innerHTML = stream.extra.username;
         
     }
     if (stream.type === 'local') {
@@ -290,6 +241,9 @@ function getVideo(stream, extra) {
         leave.title = connection.isInitiator ? 'Close conference' : 'Leave conference';
         leave.onclick = function () {
            
+            if (connection.getAllParticipants().length == 0 && connection.isInitiator)
+                DeleteConferenceFromDb(connection.extra.id);
+
             // disconnect with all users
             connection.getAllParticipants().forEach(function (pid) {
                 connection.disconnectWith(pid);
@@ -301,7 +255,7 @@ function getVideo(stream, extra) {
             });
 
             // close socket.io connection
-            connection.closeSocket();
+            connection.close();
 
             //switch tabs
             SwitchTabOnCloseConference();
@@ -309,7 +263,7 @@ function getVideo(stream, extra) {
             this.parentNode.style.display = 'none';
         };
         div.appendChild(leave);
-        h2.innerHTML = "Me";
+       // h2.innerHTML = "Me";
         
     }    
 
@@ -318,6 +272,9 @@ function getVideo(stream, extra) {
 
     return div;
 }
+
+
+
 
 connection.session.data = true; // enable data channels //needed for user ejection
 
@@ -338,6 +295,7 @@ connection.onRoomFull = function (roomid) {
 };
 
 connection.onUserIdAlreadyTaken = function (useridAlreadyTaken, yourNewUserId) {
+    alert('user id taken');
     if (connection.enableLogs) {
         console.warn('Userid already taken.', useridAlreadyTaken, 'Your new userid:', yourNewUserId);
     }
@@ -348,7 +306,7 @@ connection.onUserIdAlreadyTaken = function (useridAlreadyTaken, yourNewUserId) {
 // .......................UI Code........................
 // ......................................................
 
-function JoinButtonClick(sessionid,urlCode) {
+function JoinButtonClick(roomId,dbId) {
 
     $("#joinModalOkBtn").click(function () {
         
@@ -357,7 +315,7 @@ function JoinButtonClick(sessionid,urlCode) {
         }
         else {           
             
-            connection.join(sessionid, function (isJoinedRoom, roomid, error) {
+            connection.join(roomId, function (isJoinedRoom, roomid, error) {
                 
                 if (error) {                    
                     if (error === 'Room not available') {
@@ -368,12 +326,16 @@ function JoinButtonClick(sessionid,urlCode) {
                 }                
                 else
                 {
+                    var username = $('#joinNameText').val();
                     connection.extra = {
-                        username: $('#joinNameText').val()
+                        username: username,
+                        id: dbId
                     }
+                    connection.updateExtraData();
                     this.disabled = true;
                     $('#conferenceDetail').hide();
                     $('#videoContainer').show();
+                    $('#chatContainer').show();
                     $('#joinConferenceModal').modal('toggle');
                     activateTab(activateTab, 'quickconference')
                 }
@@ -388,10 +350,7 @@ var roomsList = document.getElementById('rooms-list');
 function SetupNewConference() {          
 
     var url = $("#createConference").val();
-
-  //  location.href = location.href.split('#')[0] + '#' + connection.extra.urlcode;
-  //  $('#UrlCode').val(location.href.split('#')[1]);
-   
+         
     $.ajax({
         type: "POST",
         url: url,
@@ -400,13 +359,15 @@ function SetupNewConference() {
         success: function (data) {
             
             //connection.interval = 1000;              
-           
+
             connection.extra = {
-                username: $('#SessionId').val(),               
+                username: $('#SessionId').val(),
+                id: data,
             } 
                       
             $('#conferenceDetail').hide();
             $('#videoContainer').show();
+            $('#chatContainer').show();
             connection.open($('#Title').val(), function (isRoomOpened, roomid, error) {
 
                 if (isRoomOpened === true) {                   
@@ -419,6 +380,8 @@ function SetupNewConference() {
 
                     if (error === 'Room not available') {
                         alert('Someone already created this room. Please either join or create a separate room.');
+                        connection.close();
+                        connection.closeSocket();
                         return;
                     }
                     alert(error);
@@ -429,6 +392,7 @@ function SetupNewConference() {
         error: function () {
             $('#conferenceDetail').show();
             $('#videoContainer').hide();
+            $('#chatContainer').hide();
         }
     });
 };
@@ -451,14 +415,14 @@ function GetAllConference() {
     });
 }
 
-function DeleteConferenceFromDb(sessionid) {
-
+function DeleteConferenceFromDb(dbId) {
+       
     var url = $("#deleteConference").val();
 
     $.ajax({
         type: "POST",
         url: url,
-        data: { sessionId: sessionid },
+        data: { sessionId: dbId },
      
         success: function (data) {
             return true;
@@ -473,15 +437,15 @@ function DeleteConferenceFromDb(sessionid) {
 function SwitchTabOnCloseConference() {
     $('#conferenceDetail').show();
     $('#videoContainer').hide();
+    $('#chatContainer').hide();
     activateTab(activateTab, 'all');
 }
-
 // ......................................................
 // ......................Handling Room-ID................
 // ......................................................
 function showRoomURL(roomid) {
     var roomHashURL = '#' + roomid;
-    var roomQueryStringURL = window.location.origin + '?roomid=' + roomid;
+    var roomQueryStringURL = window.location.origin + '?roomid=' + roomid +'&session='+connection.extra.id;
     var html = '<h2>Unique URL for your room:</h2><br>';    
    
     html += 'QueryString URL: <a href="' + roomQueryStringURL + '" target="_blank">' + roomQueryStringURL + '</a>';
@@ -557,11 +521,13 @@ function SetRoomId()
                                 }
                                 else {
                                     connection.extra = {
-                                    username: $('#joinNameText').val()
+                                        username: $('#joinNameText').val(),
+                                        id: params.session,
                                 }
                                     this.disabled = true;
                                     $('#conferenceDetail').hide();
                                     $('#videoContainer').show();
+                                    $('#chatContainer').show();
                                     $('#joinConferenceModal').modal('toggle');
                                     activateTab(activateTab, 'quickconference');
                                 }
@@ -581,3 +547,142 @@ function SetRoomId()
        
     }
 
+    connection.onopen = function (event) {
+        //connection.send({
+        //    time: Date.now(),
+        //    userid: connection.userid,
+        //    sender: connection.extra.username,
+        //    message: 'new participant joined'
+        //});
+
+       
+    };
+
+    connection.onmessage = function (event) {
+        
+        var rootEl = document.getElementById('chat-history-list');
+        //var listItem = document.createElement('li');
+
+        //var userInfoDiv = document.createElement('div');
+        //userInfoDiv.setAttribute('class', 'message-data');
+        //userInfoDiv.innerHTML = '<span class="message-data-name">' + event.data.sender + '</span> <i class="fa fa-circle me"></i>';
+        //userInfoDiv.innerHTML += '<span class="message-data-time">' + event.data.time + '</span> &nbsp; &nbsp';
+        
+
+        //var chatDiv = document.createElement('div');
+        //chatDiv.setAttribute('class', 'message my-message float-left');
+        //chatDiv.innerHTML = event.data.message;
+
+        //listItem.appendChild(userInfoDiv);
+        //listItem.appendChild(chatDiv);
+
+        //rootEl.appendChild(listItem);
+
+        // responses
+        var templateResponse = Handlebars.compile($("#message-response-template").html());
+        var contextResponse = {
+            response: event.data.message,
+            time: event.data.time,
+            sender: event.data.sender
+        };
+        this.$chatHistory = $('.chat-history');
+        this.$chatHistoryList = this.$chatHistory.find('ul');
+        this.$chatHistoryList.append(templateResponse(contextResponse));
+        this.scrollToBottom();
+       
+              
+    };
+
+    (function () {
+
+        var chat = {
+            messageToSend: '',           
+            init: function () {
+                this.cacheDOM();
+                this.bindEvents();
+                this.render();
+            },
+            cacheDOM: function () {
+                this.$chatHistory = $('.chat-history');
+                this.$button = $('#chatSendBtn');
+                this.$textarea = $('#message-to-send');
+                this.$chatHistoryList = this.$chatHistory.find('ul');
+            },
+            bindEvents: function () {
+                this.$button.on('click', this.addMessage.bind(this));
+                this.$textarea.on('keyup', this.addMessageEnter.bind(this));
+            },
+            render: function () {
+                this.scrollToBottom();
+                if (this.messageToSend.trim() !== '') {
+                    var template = Handlebars.compile($("#message-template").html());
+                    var context = {
+                        messageOutput: this.messageToSend,
+                        time: this.getCurrentTime(),
+                        sender: connection.extra.username
+                    };
+
+                    this.$chatHistoryList.append(template(context));
+                    this.scrollToBottom();
+                    this.$textarea.val('');
+
+                    
+
+                    
+                }
+
+            },
+
+            addMessage: function () {
+                connection.send({
+                    time: this.getCurrentTime(),
+                    userid: connection.userid,
+                    sender: connection.extra.username,
+                    message: $('#message-to-send').val()
+                });
+
+                
+                this.messageToSend = $('#message-to-send').val()
+                this.render();
+            },
+            addMessageEnter: function (event) {
+                // enter was pressed
+                if (event.keyCode === 13) {
+                    this.addMessage();
+                }
+            },
+            scrollToBottom: function () {
+                this.$chatHistory.scrollTop(this.$chatHistory[0].scrollHeight);
+            },
+            getCurrentTime: function () {
+                return new Date().toLocaleTimeString().
+                        replace(/([\d]+:[\d]{2})(:[\d]{2})(.*)/, "$1$3");
+            },
+            getRandomItem: function (arr) {
+                return arr[Math.floor(Math.random() * arr.length)];
+            }
+
+        };
+
+        chat.init();
+
+        //var searchFilter = {
+        //    options: { valueNames: ['name'] },
+        //    init: function () {
+        //        var userList = new List('people-list', this.options);
+        //        var noItems = $('<li id="no-items-found">No items found</li>');
+
+        //        userList.on('updated', function (list) {
+        //            if (list.matchingItems.length === 0) {
+        //                $(list.list).append(noItems);
+        //            } else {
+        //                noItems.detach();
+        //            }
+        //        });
+        //    }
+        //};
+
+        //searchFilter.init();
+
+    })();
+    
