@@ -466,6 +466,7 @@ $('#recordBtn').on("click", function (e) {
         $(this).find('i').removeClass('fa fa-play-circle fa-2x').addClass('fa fa-stop-circle fa-2x')
 
         $(this).attr("title", "Stop Recording");
+        $('#recordPara').text("Stop");
 
         var recorder = connection.recorder;
         if (!recorder) {
@@ -499,6 +500,7 @@ $('#recordBtn').on("click", function (e) {
     else {
         $(this).find('i').toggleClass('fa fa-stop-circle fa-2x').addClass('fa fa-play-circle fa-2x');
         $(this).attr("title", "Record Conference");
+        $('#recordPara').text("Record");
 
         var recorder = connection.recorder;
         if (!recorder) return alert('No recorder found.');
@@ -540,13 +542,14 @@ $('#muteBtn').on("click", function (e) {
         localStream.unmute('audio');
         $(this).find('i').toggleClass('fas fa-microphone-slash fa-2x').addClass('fas fa-microphone fa-2x');
         $(this).attr("title", "Mute");
+        $('#mutePara').text("Mute");
     }
     else {
         var localStream = connection.attachStreams[0];
         localStream.mute('audio');
         $(this).find('i').removeClass('fas fa-microphone fa-2x').addClass('fas fa-microphone-slash fa-2x');
         $(this).attr("title", "UnMute");
-       
+        $('#mutePara').text("UnMute");
     }
 });
 

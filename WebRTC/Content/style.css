@@ -1786,3 +1786,6 @@ bottom:0;
     background-color: #b12841;
     height: 52px;
 }
+.panel-li {
+    width:70px;
+}
