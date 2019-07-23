@@ -1779,5 +1779,10 @@ bottom:0;
 
 
 }
-
-
+.panel-btn {
+    background-color:#b12841;
+}
+.panel-background{
+    background-color: #b12841;
+    height: 52px;
+}

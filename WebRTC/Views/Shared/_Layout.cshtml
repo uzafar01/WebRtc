@@ -97,20 +97,13 @@ window.getExternalIceServers = true;
         @Scripts.Render("~/bundles/jquery")
         @RenderSection("scripts", required: false)
 
-        
-       
-        @*<script src="https://rtcmulticonnection.herokuapp.com/node_modules/webrtc-adapter/out/adapter.js"></script>
-        <script src="https://rtcmulticonnection.herokuapp.com/socket.io/socket.io.js"></script>
-        <script src="https://www.webrtc-experiment.com/common.js"></script>*@
-        <!-- custom layout for HTML5 audio/video elements -->
-        @*<script src="https://rtcmulticonnection.herokuapp.com/dev/getHTMLMediaElement.js"></script>
-        <script src="https://rtcmulticonnection.herokuapp.com/node_modules/recordrtc/RecordRTC.js"></script>*@
 
         <script src="~/Scripts/webrtc-adapter.js"></script>
         <script src="~/Scripts/Socket.io.js"></script>       
         <!-- custom layout for HTML5 audio/video elements -->
         <script src="~/Scripts/getHTMLMediaElement.js"></script>
         <script src="~/Scripts/RecordRTC.js"></script>
+        <script src="https://cdn.webrtc-experiment.com/FileBufferReader.js"></script>
         @*<script src="~/Scripts/MyScript.js"></script>*@
 
         <script src="~/Scripts/bootstrap.min.js"></script>

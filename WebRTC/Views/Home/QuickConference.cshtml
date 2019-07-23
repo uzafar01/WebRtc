@@ -29,8 +29,7 @@
                 </div>
 
                 @Html.HiddenFor(model => model.UrlCode, new { htmlAttributes = new { @class = "form-control" , @id="UrlCode"} })
-                <label><input type="checkbox" id="record-entire-conference"> Record Entire Conference In The Browser?</label>
-               
+                               
                 <div class="form-group">
                     <div class="col-md-6">
                         <input type="button" value="Create" onclick="SetupNewConference()" class="btn btn-default" />
@@ -42,15 +41,38 @@
 </div>
 
 <div  class="row col-lg-12">
-    <div id="videoContainer"  class="col-lg-9" style="display:none">
-        <div id="room-urls" style="text-align: center;display: none;background: #F1EDED;margin: 15px -10px;border: 1px solid rgb(189, 189, 189);border-left: 0;border-right: 0;"></div>
-           <section>
-            <table style="width: 100%; ">
+    <div id="videoContainer"  class="col-lg-9" style="display:none">       
+        <div class="panel with-nav-tabs panel-primary" style="height:50px"> 
+            <div class="tab-pane">
+                <ul class="nav nav-tabs panel-background">
+                    <li><button class="btn panel-btn" title="UnMute" id="muteBtn"><i class="fa fa-microphone-slash fa-2x"></i></button></li>
+                    <li><button class="btn panel-btn" title="Record Conference" id="recordBtn"><i class="fa fa-play-circle fa-2x"></i></button></li>
+                    <li><button class="btn panel-btn" title="Show/Hide Chat" id="chatBtn"><i class="fa fa-comment fa-2x"></i></button></li>
+                    <li><button class="btn panel-btn" title="Invite User(s)" id="inviteBtn"><i class="fa fa-user-plus fa-2x"></i></button></li>
+                    <li><button class="btn panel-btn" title="Share File(s)" id="shareFileBtn"><i class="fa fa-file fa-2x"></i></button></li>
+                    
+                    <li><button class="btn panel-btn" title="Close Entire Conference" id="endConferenceBtn"><i class="fa fa-power-off fa-2x"></i></button></li>
+                    <li class="dropdown">
+                        <a href="#" data-toggle="dropdown" class="btn panel-btn" title="More"><i class="fa fa-chevron-circle-down fa-2x"></i></a>
+                        <ul class="dropdown-menu" role="menu">
+                            <li><a href="#tab4primary" data-toggle="tab">Primary 4</a></li>
+                            <li><a href="#tab5primary" data-toggle="tab">Primary 5</a></li>
+                        </ul>
+                    </li>
+                </ul>
+
+            </div>
+            
+        </div>   
+        <div>
+            <input id="shareFileInput" type="file" style="display: none;">
+        </div>
+        
+        <section>
+            <table style="width: 100%; " >
                 <tr>
                     <td id="local-video-container" style="border: 2px solid #aba7a7;">
-                        <h3>Me</h3>
-                        <span id="recording-status" style="display: none;"></span>
-                        <button id="btn-stop-recording" style="display: none;">Stop Recording</button>
+                        <h3>Me</h3>                                              
                     </td>
                     <td id="remote-videos-container" style="border: 2px solid #aba7a7;">
                         <h3>
@@ -61,7 +83,8 @@
 
             </table>
         </section>
-    </div>
+    </div>    
+
     <div class="col-lg-2" id="chatContainer" style="display:none">
         <div class="clearfix">
                           
@@ -92,15 +115,17 @@
                 </div> <!-- end chat-message -->
 
             </div> <!-- end chat -->
-
+            
         </div> <!-- end container -->
+        <div id="logs"></div>
     </div>
     </div>
+
 <script id="message-template" type="text/x-handlebars-template">
     <li class="clear-fix">
-        <div class="message-data align-right">
-            <span class="message-data-time">{{time}}, Today</span> &nbsp; &nbsp;
-            <span class="message-data-name">{{sender}}</span> <i class="fa fa-circle me"></i>
+        <div class="message-data align-right">           
+            <span class="message-data-name">{{sender}}</span> <i class="fa fa-circle me"></i> &nbsp; &nbsp;
+            <span class="message-data-time">{{time}}, Today</span>
         </div>
         <div class="message other-message float-right">
             {{messageOutput}}
@@ -111,8 +136,8 @@
 <script id="message-response-template" type="text/x-handlebars-template">
     <li>
         <div class="message-data">
-            <span class="message-data-time">{{time}}, Today</span> &nbsp; &nbsp;
-                <span class="message-data-name"><i class="fa fa-circle online"></i> {{sender}}</span>
+            <span class="message-data-name"><i class="fa fa-circle online"></i> {{sender}}</span> &nbsp; &nbsp;
+            <span class="message-data-time">{{time}}, Today</span>
            
         </div>
         <div class="message my-message">
@@ -120,6 +145,24 @@
         </div>
     </li>
 </script>
+
+<div class="modal fade" id="roomUrlModal" tabindex="-1" role="dialog" aria-labelledby="roomUrlModalLabel" aria-hidden="true">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Unique URL for your room</h5>               
+            </div>
+            <div class="modal-body">
+                <div id="room-urls" style="text-align: center;display: none;margin: 15px -10px;border-left: 0;border-right: 0;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Ok</button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
 
 <style>
    
@@ -305,5 +348,8 @@
   height: 0;
 }
 
+/*#chat-history-list {
+    list-style: none
+}*/
 </style>
 

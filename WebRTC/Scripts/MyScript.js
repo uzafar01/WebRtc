@@ -27,6 +27,9 @@ connection.iceServers = [{
     ]
 }];
 connection.videosContainer = document.getElementById('local-video-container');
+connection.enableFileSharing = true;
+connection.autoSaveToDisk = false;
+
 connection.onstream = function (event) {
     var existing = document.getElementById(event.streamid);
     if (existing && existing.parentNode) {
@@ -34,9 +37,10 @@ connection.onstream = function (event) {
     }
     event.mediaElement.removeAttribute('src');
     event.mediaElement.removeAttribute('srcObject');
-    event.mediaElement.muted = true;
-    event.mediaElement.volume = 0;
+ 
     if (event.type === 'local') {
+         event.mediaElement.muted = true;
+         event.mediaElement.volume = 0;
         var video = getVideo(event, event.extra);
         document.getElementById('local-video-container').appendChild(video);
 
@@ -45,6 +49,11 @@ connection.onstream = function (event) {
         var video = getVideo(event, event.extra);
         var remoteVideosContainer = document.getElementById('remote-videos-container');
         remoteVideosContainer.appendChild(video, remoteVideosContainer.firstChild);
+        var recorder = connection.recorder;
+        if (recorder) {
+            recorder.getInternalRecorder().addStreams([event.stream]);
+            connection.recorder.streams.push(event.stream);
+        }
     }
 
     event.mediaElement.width = innerWidth / 3.4;
@@ -56,27 +65,7 @@ connection.onstream = function (event) {
 
     // to keep room-id in cache
     localStorage.setItem(connection.socketMessageEvent, connection.sessionid);
-    chkRecordConference.parentNode.style.display = 'none';
-    if (chkRecordConference.checked === true) {
-        btnStopRecording.style.display = 'inline-block';
-        recordingStatus.style.display = 'inline-block';
-        var recorder = connection.recorder;
-        if (!recorder) {
-            recorder = RecordRTC([event.stream], {
-                type: 'video'
-            });
-            recorder.startRecording();
-            connection.recorder = recorder;
-        }
-        else {
-            recorder.getInternalRecorder().addStreams([event.stream]);
-        }
-        if (!connection.recorder.streams) {
-            connection.recorder.streams = [];
-        }
-        connection.recorder.streams.push(event.stream);
-        recordingStatus.innerHTML = 'Recording ' + connection.recorder.streams.length + ' streams';
-    }
+    
     if (event.type === 'local') {
         connection.socket.on('disconnect', function () {
             if (!connection.getAllParticipants().length) {
@@ -84,21 +73,9 @@ connection.onstream = function (event) {
             }
         });
     }
-};
-var recordingStatus = document.getElementById('recording-status');
-var chkRecordConference = document.getElementById('record-entire-conference');
-var btnStopRecording = document.getElementById('btn-stop-recording');
-btnStopRecording.onclick = function () {
-    var recorder = connection.recorder;
-    if (!recorder) return alert('No recorder found.');
-    recorder.stopRecording(function () {
-        var blob = recorder.getBlob();
-        invokeSaveAsDialog(blob);
-        connection.recorder = null;
-        btnStopRecording.style.display = 'none';
-        recordingStatus.style.display = 'none';
-        chkRecordConference.parentNode.style.display = 'inline-block';
-    });
+       
+
+    
 };
 
 connection.onstreamended = function (e) {
@@ -213,10 +190,20 @@ function getVideo(stream, extra) {
     div.className = 'video-container';
     div.id = stream.userid || 'self';
     div.title = stream.extra.username ? stream.extra.username : 'Me';
-    var h2 = document.createElement('h2');
+    
+
+    var h2 = document.createElement('h2');   
     h2.innerHTML = stream.extra.username ? stream.extra.username : 'Me';
+
+    if (connection.isInitiator) {
+        connection.extra.isInitiator = true;
+        connection.updateExtraData();
+    }
     if (stream.type === 'remote') {
         if (connection.isInitiator) {
+            connection.extra.isInitiator = true;
+            connection.updateExtraData();
+
             var eject = document.createElement('button');
             eject.className = 'eject';
             eject.title = 'Eject this User';
@@ -230,8 +217,14 @@ function getVideo(stream, extra) {
                 this.parentNode.style.display = 'none';
             };
             div.appendChild(eject);
-            
+           
         }
+
+        h2.innerHTML = stream.extra.username;
+        div.title = stream.extra.username;
+            
+            
+    
        // h2.innerHTML = stream.extra.username;
         
     }
@@ -262,32 +255,38 @@ function getVideo(stream, extra) {
 
             this.parentNode.style.display = 'none';
         };
+       
+        if (stream.extra.username) {
+            div.title = stream.extra.username;
+            h2.innerHTML = stream.extra.username ;
+        }
+        else {
+            setTimeout(function () {
+                div.title = connection.extra.username ? connection.extra.username : 'Me';
+                h2.innerHTML = connection.extra.username ? connection.extra.username : 'Me';
+            },4000);
+        }
+           
+        setTimeout(function () {
+            connection.send({
+                message: connection.extra.username + ' has joined on ' + getCurrentTime(),
+                alert: true
+            });
+        }, 2000);
         div.appendChild(leave);
-       // h2.innerHTML = "Me";
-        
+        // h2.innerHTML = "Me";
+
+       
     }    
 
     div.appendChild(stream.mediaElement);   
     div.appendChild(h2);
-
     return div;
 }
 
-
-
-
 connection.session.data = true; // enable data channels //needed for user ejection
 
-//needed for user ejection
-connection.onmessage = function (event) {
-    if (event.data.userRemoved === true) {
-        if (event.data.removedUserId == connection.userid) {
-            alert(connection.userid + "has been ejected from conference.");
-            connection.close();
-            connection.closeSocket();
-        }
-    }
-};
+
 
 connection.maxParticipantsAllowed = 4; // one-to-one
 connection.onRoomFull = function (roomid) {
@@ -333,6 +332,8 @@ function JoinButtonClick(roomId,dbId) {
                     }
                     connection.updateExtraData();
                     this.disabled = true;
+                  
+                   
                     $('#conferenceDetail').hide();
                     $('#videoContainer').show();
                     $('#chatContainer').show();
@@ -440,15 +441,167 @@ function SwitchTabOnCloseConference() {
     $('#chatContainer').hide();
     activateTab(activateTab, 'all');
 }
+
+
+// ......................................................
+// ......................Video Panel buttons................
+// ......................................................
+
+$('#inviteBtn').on("click", function () {
+    SetRoomId();
+
+    showRoomURL(connection.sessionid);
+    $('#roomUrlModal').modal('show');
+
+});
+
+$('#chatBtn').on("click", function (e) {
+    $("#chatContainer").toggle();
+});
+
+$('#recordBtn').on("click", function (e) {
+
+    if ($(this).attr("title") === "Record Conference") {
+        
+        $(this).find('i').removeClass('fa fa-play-circle fa-2x').addClass('fa fa-stop-circle fa-2x')
+
+        $(this).attr("title", "Stop Recording");
+
+        var recorder = connection.recorder;
+        if (!recorder) {
+            
+            connection.streamEvents.selectAll().forEach(function (streamEvent) {
+
+                var stream = streamEvent.stream;
+              
+                if (stream) {
+                    if (!recorder) {
+                        recorder = RecordRTC([stream], {
+                            type: 'video'
+                        });
+                        recorder.startRecording();
+                        connection.recorder = recorder;
+                    }
+                    else {
+                        recorder.getInternalRecorder().addStreams([stream]);
+                    }
+
+                    if (!connection.recorder.streams) {
+                        connection.recorder.streams = [];
+                    }
+                    connection.recorder.streams.push(event.stream);
+                }
+            });           
+           
+        }      
+       
+    }
+    else {
+        $(this).find('i').toggleClass('fa fa-stop-circle fa-2x').addClass('fa fa-play-circle fa-2x');
+        $(this).attr("title", "Record Conference");
+
+        var recorder = connection.recorder;
+        if (!recorder) return alert('No recorder found.');
+        recorder.stopRecording(function () {
+            var blob = recorder.getBlob();
+            invokeSaveAsDialog(blob);
+            connection.recorder = null;
+        });
+    }
+
+});
+
+$('#endConferenceBtn').on("click", function (e) {
+    
+    if (connection.extra.isInitiator) {
+        connection.send({
+            closeAll: true            
+        });
+
+        // disconnect with all users
+        connection.getAllParticipants().forEach(function (pid) {
+            connection.disconnectWith(pid);
+        });
+
+        // stop all local cameras
+        connection.attachStreams.forEach(function (localStream) {
+            localStream.stop();
+        });
+
+        // close socket.io connection
+        connection.close();
+    }
+});
+
+$('#muteBtn').on("click", function (e) {
+    if ($(this).attr("title") === "UnMute") {
+
+        var localStream = connection.attachStreams[0];
+        localStream.unmute('audio');
+        $(this).find('i').toggleClass('fas fa-microphone-slash fa-2x').addClass('fas fa-microphone fa-2x');
+        $(this).attr("title", "Mute");
+    }
+    else {
+        var localStream = connection.attachStreams[0];
+        localStream.mute('audio');
+        $(this).find('i').removeClass('fas fa-microphone fa-2x').addClass('fas fa-microphone-slash fa-2x');
+        $(this).attr("title", "UnMute");
+       
+    }
+});
+
+$('#shareFileBtn').click(function () {
+    $('#shareFileInput').click();
+});
+
+var fileInput = document.getElementById('shareFileInput');
+fileInput.onchange = function () {
+    connection.fbr = null;
+    var file = this.files[0];
+
+    if (!file) return;
+    connection.send(file);
+};
+
+// www.RTCMultiConnection.org/docs/onFileEnd/
+connection.onFileEnd = function (file) {
+     
+    if (file.remoteUserId === connection.userid) {
+       var user =  $('#' + file.userid).attr("title");
+       var message = '<h5>'+user + '  sent file <a href="' + file.url + '" target="_blank" download="' + file.name + '">' + file.name + '</a>' + ' Size: ' + bytesToSize(file.size) + '.</h5>';
+       appendLog(message);    
+
+    }
+    else {
+        var message = '<h5> You shared file <a href="' + file.url + '" target="_blank" download="' + file.name + '">' + file.name + '</a>' + ' Size: ' + bytesToSize(file.size) + '.</h5>';
+        appendLog(message);
+
+    }
+
+    $("div[title='" + file.name + "']").remove();
+};
+function appendLog(html) {
+    $("#chatContainer").show();
+    var chatHistory = $('.chat-history');
+    var chatHistoryList = chatHistory.find('ul');
+    var listItem = document.createElement('li');
+    var chatDiv = document.createElement('div');
+    chatDiv.innerHTML = html;
+    chatDiv.setAttribute('class', 'alert');
+    listItem.appendChild(chatDiv);
+    chatHistoryList.append(listItem);
+    
+}
 // ......................................................
 // ......................Handling Room-ID................
 // ......................................................
+
 function showRoomURL(roomid) {
     var roomHashURL = '#' + roomid;
     var roomQueryStringURL = window.location.origin + '?roomid=' + roomid +'&session='+connection.extra.id;
-    var html = '<h2>Unique URL for your room:</h2><br>';    
+    var html = '<h4>Invite users by sharing URL below:</h4><br>';    
    
-    html += 'QueryString URL: <a href="' + roomQueryStringURL + '" target="_blank">' + roomQueryStringURL + '</a>';
+    html += '<a href="' + roomQueryStringURL + '" target="_blank">' + roomQueryStringURL + '</a>';
     var roomURLsDiv = document.getElementById('room-urls');
     roomURLsDiv.innerHTML = html;
     roomURLsDiv.style.display = 'block';
@@ -523,7 +676,8 @@ function SetRoomId()
                                     connection.extra = {
                                         username: $('#joinNameText').val(),
                                         id: params.session,
-                                }
+                                    }                                    
+                                    connection.updateExtraData();
                                     this.disabled = true;
                                     $('#conferenceDetail').hide();
                                     $('#videoContainer').show();
@@ -547,52 +701,54 @@ function SetRoomId()
        
     }
 
-    connection.onopen = function (event) {
-        //connection.send({
-        //    time: Date.now(),
-        //    userid: connection.userid,
-        //    sender: connection.extra.username,
-        //    message: 'new participant joined'
-        //});
+   
+// ......................................................
+// ......................Chat................
+// ......................................................
 
-       
-    };
-
+    //needed for user ejection
     connection.onmessage = function (event) {
-        
-        var rootEl = document.getElementById('chat-history-list');
-        //var listItem = document.createElement('li');
-
-        //var userInfoDiv = document.createElement('div');
-        //userInfoDiv.setAttribute('class', 'message-data');
-        //userInfoDiv.innerHTML = '<span class="message-data-name">' + event.data.sender + '</span> <i class="fa fa-circle me"></i>';
-        //userInfoDiv.innerHTML += '<span class="message-data-time">' + event.data.time + '</span> &nbsp; &nbsp';
-        
-
-        //var chatDiv = document.createElement('div');
-        //chatDiv.setAttribute('class', 'message my-message float-left');
-        //chatDiv.innerHTML = event.data.message;
-
-        //listItem.appendChild(userInfoDiv);
-        //listItem.appendChild(chatDiv);
-
-        //rootEl.appendChild(listItem);
-
-        // responses
-        var templateResponse = Handlebars.compile($("#message-response-template").html());
-        var contextResponse = {
-            response: event.data.message,
-            time: event.data.time,
-            sender: event.data.sender
-        };
-        this.$chatHistory = $('.chat-history');
-        this.$chatHistoryList = this.$chatHistory.find('ul');
-        this.$chatHistoryList.append(templateResponse(contextResponse));
-        this.scrollToBottom();
        
-              
-    };
+        if (event.data.userRemoved === true) {
+            if (event.data.removedUserId == connection.userid) {
+                alert(connection.userid + "has been ejected from conference.");
+                connection.close();
+                connection.closeSocket();
+            }
+        }
+        else if (event.data.closeAll === true) {
+            
+                connection.close();
+                connection.closeSocket();
+          
+        }
+        else {
+            var rootEl = document.getElementById('chat-history-list');
+            this.$chatHistory = $('.chat-history');
+            this.$chatHistoryList = this.$chatHistory.find('ul');
+            if (event.data.alert) {
+                var listItem = document.createElement('li');
+                var chatDiv = document.createElement('div');
+                chatDiv.innerHTML = '<h5>' + event.data.message + '<h5>';
+                chatDiv.setAttribute('class', 'alert');
+                listItem.appendChild(chatDiv);
+                this.$chatHistoryList.append(listItem);
+            }
+            else {
+                // responses
+                var templateResponse = Handlebars.compile($("#message-response-template").html());
+                var contextResponse = {
+                    response: event.data.message,
+                    time: event.data.time,
+                    sender: event.data.sender
+                };
 
+                this.$chatHistoryList.append(templateResponse(contextResponse));
+            }
+            scrollToBottom();
+        }
+    };
+    
     (function () {
 
         var chat = {
@@ -618,7 +774,7 @@ function SetRoomId()
                     var template = Handlebars.compile($("#message-template").html());
                     var context = {
                         messageOutput: this.messageToSend,
-                        time: this.getCurrentTime(),
+                        time: getCurrentTime(),
                         sender: connection.extra.username
                     };
 
@@ -635,7 +791,7 @@ function SetRoomId()
 
             addMessage: function () {
                 connection.send({
-                    time: this.getCurrentTime(),
+                    time: getCurrentTime(),
                     userid: connection.userid,
                     sender: connection.extra.username,
                     message: $('#message-to-send').val()
@@ -654,10 +810,7 @@ function SetRoomId()
             scrollToBottom: function () {
                 this.$chatHistory.scrollTop(this.$chatHistory[0].scrollHeight);
             },
-            getCurrentTime: function () {
-                return new Date().toLocaleTimeString().
-                        replace(/([\d]+:[\d]{2})(:[\d]{2})(.*)/, "$1$3");
-            },
+           
             getRandomItem: function (arr) {
                 return arr[Math.floor(Math.random() * arr.length)];
             }
@@ -685,4 +838,14 @@ function SetRoomId()
         //searchFilter.init();
 
     })();
+
+    function getCurrentTime() {
+    return new Date().toLocaleTimeString().
+            replace(/([\d]+:[\d]{2})(:[\d]{2})(.*)/, "$1$3");
+}
+
+    function scrollToBottom() {
+      this.$chatHistory = $('.chat-history');        
+    this.$chatHistory.scrollTop(this.$chatHistory[0].scrollHeight);
+}
     
