@@ -1779,6 +1779,38 @@ bottom:0;
 
 
 }
+
+
+
+.notify{  
+    
+  width:25%;
+  height:0;  
+  box-sizing:border-box;
+  color:white;  
+  text-align:center;
+  background:rgba(0,0,0,.6);
+  overflow:hidden;
+  box-sizing:border-box;
+  transition:height .2s;
+   position: fixed;
+    top: 90%;
+    left: 85%;
+    -webkit-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+
+}
+
+#notifyType:before{
+  display:block;
+  margin-top:15px; 
+  
+}
+
+.notify-active{  
+  height:75px;
+}
+
 .panel-btn {
     background-color:#b12841;
 }
@@ -1789,3 +1821,20 @@ bottom:0;
 .panel-li {
     width:70px;
 }
+
+.notify-close {
+    color: #fff;
+    float: right;
+    font-size: 30px;
+    font-weight: bold;
+}
+.video-table {
+overflow: hidden; 
+ width: 1200px;
+}
+
+.video-table div {
+float: left;
+width: 33%; /** Or, a fixed pixel width of 200px; **/
+}
+

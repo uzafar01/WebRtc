@@ -81,6 +81,11 @@ window.getExternalIceServers = true;
                         </button>
                         <a class="navbar-brand" href="index.html"><img src="img/logo.png" alt="logo" /></a>
                     </div>
+                    <div class="notify">
+                        <button type='button' class='notify-close' onclick='$(this).parent().removeClass("notify-active");'>×</button>
+                    <br />
+                        <div id="notify"></div>
+                    </div>
                     <div class="navbar-collapse collapse ">
                         <ul class="nav navbar-nav">
                             <li><a class="active" href="index.html">Home</a></li>
@@ -91,6 +96,7 @@ window.getExternalIceServers = true;
                 </div>
             </div>
         </header><!-- end header -->
+        
         @RenderBody()
 
 

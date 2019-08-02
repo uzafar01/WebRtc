@@ -10,8 +10,9 @@ connection.socketURL = 'https://rtcmulticonnection.herokuapp.com:443/';
 connection.socketMessageEvent = 'video-conference-demo';
 connection.session = {
     audio: true,
-    video: true
+    video: true,    
 };
+
 connection.sdpConstraints.mandatory = {
     OfferToReceiveAudio: true,
     OfferToReceiveVideo: true
@@ -47,7 +48,7 @@ connection.onstream = function (event) {
     }
     if (event.type === 'remote') {
         var video = getVideo(event, event.extra);
-        var remoteVideosContainer = document.getElementById('remote-videos-container');
+        var remoteVideosContainer = document.getElementById('local-video-container');
         remoteVideosContainer.appendChild(video, remoteVideosContainer.firstChild);
         var recorder = connection.recorder;
         if (recorder) {
@@ -56,6 +57,10 @@ connection.onstream = function (event) {
         }
     }
 
+    if (event.type === 'screen') {
+        alert('screen');
+    }
+    
     event.mediaElement.width = innerWidth / 3.4;
 
     event.mediaElement.width = 600;
@@ -119,8 +124,7 @@ connection.onstreamended = function (e) {
 
 //};
 
-connection.onleave = function (event) {
-   // alert(event.extra.username + ' left.');
+connection.onleave = function (event) {   
     if (connection.getAllParticipants().length == 0 && connection.isInitiator && connection.userid == event.userid)
         DeleteConferenceFromDb(connection.extra.id);
 };
@@ -134,7 +138,7 @@ connection.onclose = function (event) {
 connection.onMediaError = function (e) {
     if (e.message === 'Concurrent mic process limit.') {
         if (DetectRTC.audioInputDevices.length <= 1) {
-            alert('Please select external microphone. ');
+            showDialog('Please select external microphone. ');
             return;
         }
         var secondaryMic = DetectRTC.audioInputDevices[1].deviceId;
@@ -157,7 +161,8 @@ function scaleVideos() {
     var videos = document.querySelectorAll('video'),
         length = videos.length,
         video;
-    var minus = 130;
+    var videoInRow = 2;
+    var minus = 77;
     var windowHeight = 700;
     var windowWidth = 600;
     var windowAspectRatio = windowWidth / windowHeight;
@@ -165,10 +170,10 @@ function scaleVideos() {
     var blockAspectRatio;
     var tempVideoWidth = 0;
     var maxVideoWidth = 0;
-    for (var i = length; i > 0; i--) {
-        blockAspectRatio = i * videoAspectRatio / Math.ceil(length / i);
+    for (var i = videoInRow; i > 0; i--) {
+        blockAspectRatio = i * videoAspectRatio / Math.ceil(videoInRow / i);
         if (blockAspectRatio <= windowAspectRatio) {
-            tempVideoWidth = videoAspectRatio * windowHeight / Math.ceil(length / i);
+            tempVideoWidth = videoAspectRatio * windowHeight / Math.ceil(videoInRow / i);
         } else {
             tempVideoWidth = windowWidth / i;
         }
@@ -177,8 +182,9 @@ function scaleVideos() {
     }
     for (var i = 0; i < length; i++) {
         video = videos[i];
-        if (video)
-            video.width = maxVideoWidth - minus;
+        if (video) {
+            video.width = maxVideoWidth - minus;            
+        }
     }
 }
 window.onresize = scaleVideos;
@@ -231,7 +237,7 @@ function getVideo(stream, extra) {
     if (stream.type === 'local') {
         var leave = document.createElement('button');
         leave.className = 'eject';
-        leave.title = connection.isInitiator ? 'Close conference' : 'Leave conference';
+        leave.title =  'Leave conference';
         leave.onclick = function () {
            
             if (connection.getAllParticipants().length == 0 && connection.isInitiator)
@@ -290,11 +296,11 @@ connection.session.data = true; // enable data channels //needed for user ejecti
 
 connection.maxParticipantsAllowed = 4; // one-to-one
 connection.onRoomFull = function (roomid) {
-    alert('Room is full.');
+    showDialog('Room is full.');
 };
 
 connection.onUserIdAlreadyTaken = function (useridAlreadyTaken, yourNewUserId) {
-    alert('user id taken');
+    showDialog('user id taken',true);
     if (connection.enableLogs) {
         console.warn('Userid already taken.', useridAlreadyTaken, 'Your new userid:', yourNewUserId);
     }
@@ -318,10 +324,10 @@ function JoinButtonClick(roomId,dbId) {
                 
                 if (error) {                    
                     if (error === 'Room not available') {
-                        alert('This room does not exist. Please either create it or wait for moderator to enter in the room.');
+                        showDialog('This room does not exist. Please either create it or wait for moderator to enter in the room.',true);
                         return;
                     }
-                    alert(error);
+                    showDialog(error, true);
                 }                
                 else
                 {
@@ -385,7 +391,7 @@ function SetupNewConference() {
                         connection.closeSocket();
                         return;
                     }
-                    alert(error);
+                    showDialog(error, true);
                 }
             });          
            
@@ -459,6 +465,47 @@ $('#chatBtn').on("click", function (e) {
     $("#chatContainer").toggle();
 });
 
+$('#shareScreenBtn').on("click", function (e) {
+
+    var cameraOptions = {
+
+        screen: true,
+        audio: true
+    };
+
+    connection.captureUserMedia(function (camera) {
+        var video = document.createElement('video');
+        video.src = URL.createObjectURL(camera);
+        video.muted = true;
+
+        var streamLocalEvent = {
+            type: 'screen',
+            stream: camera,
+            streamid: camera.id,
+            mediaElement: video,
+            isScreen: true
+        };
+
+
+      //  connection.addStream(streamLocalEvent);
+
+        connection.onstream(streamLocalEvent);
+        //connection.onstream(streamRemoteEvent);
+    }, cameraOptions);
+
+    //     var audioStream = captureUsingGetUserMedia();
+    //var screenStream = captureUsingGetUserMedia();
+
+    //var audioTrack = audioStream.getAudioTracks()[0];
+
+    //// add audio tracks into screen stream
+    //screenStream.addTrack( audioTrack );
+
+
+    //connection.addStream( screenStream );
+    //connection.createOffer(success, failure, options);
+});
+
 $('#recordBtn').on("click", function (e) {
 
     if ($(this).attr("title") === "Record Conference") {
@@ -503,7 +550,7 @@ $('#recordBtn').on("click", function (e) {
         $('#recordPara').text("Record");
 
         var recorder = connection.recorder;
-        if (!recorder) return alert('No recorder found.');
+        if (!recorder) return showDialog('Error occurred while recording session.', true); 
         recorder.stopRecording(function () {
             var blob = recorder.getBlob();
             invokeSaveAsDialog(blob);
@@ -625,7 +672,7 @@ function showRoomURL(roomid) {
 if (navigator.connection &&
    navigator.connection.type === 'cellular' &&
    navigator.connection.downlinkMax <= 0.115) {
-    alert('2G is not supported. Please use a better internet service.');
+    showDialog('2G is not supported. Please use a better internet service.', true);   
 }
 
 var hashString = location.hash.replace('#', '');
@@ -670,10 +717,10 @@ function SetRoomId()
                             connection.join(roomid, function (isJoinedRoom, roomid, error) {
                                 if (error) {
                                     if (error === 'Room not available') {
-                                        alert('This room does not exist. Please either create it or wait for moderator to enter in the room.');
+                                        showDialog('This room does not exist. Please either create it or wait for moderator to enter in the room.', true); 
                                         return;
                                     }
-                                    alert(error);
+                                    showDialog(error, true);
                                 }
                                 else {
                                     connection.extra = {
@@ -693,7 +740,7 @@ function SetRoomId()
                             return;
                         }
                         else {
-                            alert('This room does not exist.');
+                            showDialog('This room does not exist.', true);
                             return;
                         }
                         //setTimeout(reCheckRoomPresence, 5000);
@@ -714,7 +761,7 @@ function SetRoomId()
        
         if (event.data.userRemoved === true) {
             if (event.data.removedUserId == connection.userid) {
-                alert(connection.userid + "has been ejected from conference.");
+                showDialog(connection.userid + "has been ejected from conference.");
                 connection.close();
                 connection.closeSocket();
             }
@@ -852,3 +899,14 @@ function SetRoomId()
     this.$chatHistory.scrollTop(this.$chatHistory[0].scrollHeight);
 }
     
+    function showDialog(msg, isError) {
+        $(".notify").addClass("notify-active");
+        $("#notify").text(msg);
+                
+        if (!isError) {
+            setTimeout(function () {
+                $(".notify").removeClass("notify-active");
+                //   $(".notify").val('');
+            }, 5000);
+        }
+    }

@@ -42,13 +42,14 @@
 
 <div  class="row col-lg-12">
     <div id="videoContainer"  class="col-lg-9" style="display:none">       
-        <div class="panel with-nav-tabs panel-primary" style="height:50px"> 
+        <div class="panel with-nav-tabs panel-primary"  style="height:50px"> 
             <div class="tab-pane">
                 <ul class="nav nav-tabs panel-background">
                     <li class="panel-li"><button class="btn panel-btn" title="UnMute" id="muteBtn"><i class="fa fa-microphone-slash fa-2x"></i></button></li>
                     <li class="panel-li"><button class="btn panel-btn" title="Record Conference" id="recordBtn"><i class="fa fa-play-circle fa-2x"></i></button></li>
                     <li class="panel-li"><button class="btn panel-btn" title="Show/Hide Chat" id="chatBtn"><i class="fa fa-comment fa-2x"></i></button></li>
                     <li class="panel-li"><button class="btn panel-btn" title="Invite User(s)" id="inviteBtn"><i class="fa fa-user-plus fa-2x"></i></button></li>
+                    <li class="panel-li"><button class="btn panel-btn" title="Share Screen" id="shareScreenBtn"><i class="fa fa-desktop fa-2x"></i></button></li>
                     <li class="panel-li"><button class="btn panel-btn" title="Share File(s)" id="shareFileBtn"><i class="fa fa-file fa-2x"></i></button></li>
                     <li class="panel-li"><button class="btn panel-btn" title="Close Entire Conference" id="endConferenceBtn"><i class="fa fa-power-off fa-2x"></i></button></li>
                     <li class="dropdown panel-li" >
@@ -64,8 +65,9 @@
                     <li class="panel-li"><p id="recordPara" style="text-align:center;padding-left:0px">Record</p></li>
                     <li class="panel-li"><p style="text-align:center;padding-left:0px">Chat</p></li>
                     <li class="panel-li"><p style="text-align:center">Invite</p></li>
-                    <li class="panel-li"><p style="text-align:center">Share</p></li>
-                    <li class="panel-li"><p style="text-align:center; padding-left:0px"">Quit</p></li>
+                    <li class="panel-li"><p style="text-align:center">Screen</p></li>
+                    <li class="panel-li"><p style="text-align:center">File</p></li>
+                    <li class="panel-li"><p style="text-align:center; padding-left:0px">Quit</p></li>
                     <li class="panel-li"><p>More</p></li>
                 </ul>
 </div>
@@ -76,20 +78,25 @@
         </div>
         
         <section>
-            <table style="width: 100%; " >
+            @*<table style="width: 100%; " id="videoContainer" >
                 <tr>
-                    <td id="local-video-container" style="border: 2px solid #aba7a7;">
-                        <h3>Me</h3>                                              
+                    <td id="local-video-container" style="background: #F2F5F8;">
+                        <h3 style="font:#ffffff">Me</h3>                                              
                     </td>
-                    <td id="remote-videos-container" style="border: 2px solid #aba7a7;">
-                        <h3>
+                    <td id="remote-videos-container" style="background: #F2F5F8;">
+                        <h3 style="font:#ffffff">
                             Peer(s)
                         </h3>
                     </td>
                 </tr>             
 
-            </table>
-        </section>
+            </table>*@
+
+            <div class="video-table" id="local-video-container"></div>
+            <div class="video-table" id="remote-videos-container"></div>
+            
+                
+</section>
     </div>    
 
     <div class="col-lg-2" id="chatContainer" style="display:none">
@@ -358,5 +365,12 @@
 /*#chat-history-list {
     list-style: none
 }*/
+
+
+
+
+
+
+
 </style>
 
